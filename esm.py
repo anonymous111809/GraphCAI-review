@@ -1,35 +1,36 @@
 import torch
-from esm.models.esmc import ESMC
-from esm.tokenization.sequence import SequenceTokenizer
+import esm
+import os
 from Bio import SeqIO
 import numpy as np
-import os
 
-device = torch.device("cuda:6" if torch.cuda.is_available() and torch.cuda.device_count() > 6 else "cpu")
+device = torch.device(f"cuda:6" if torch.cuda.is_available() and torch.cuda.device_count() > 6 else "cpu")
 
-# 1. Load ESMC-600M
-model = ESMC.from_pretrained("esmc-600m", device=device)
-# model.eval()
-
-# 2. Initialize tokenizer
-tokenizer = SequenceTokenizer()
-
-fasta_path = "/path/to/Dataset/NN/fasta/allseq.fa"
-output_directory = "/path/to/Dataset/NN/esmc_600M"
+model_name = 'esm2_t36_3B_UR50D'  
+model, alphabet = esm.pretrained.load_model_and_alphabet(model_name)
+model = model.to(device)
+model.eval()
+fasta_path = '/home/xxx/Dataset/NN/fasta/allseq.fa'
+# output_directory = 'esm_ebd_DECOY_train'
+output_directory = '/home/xxx/Dataset/NN/esmc_6B'
 os.makedirs(output_directory, exist_ok=True)
 
-with open(fasta_path) as fasta_file:
+with open(fasta_path, 'r') as fasta_file:
     for record in SeqIO.parse(fasta_file, "fasta"):
-        seq = str(record.seq)
-        print(record.id, len(seq))
+        print(f"Sequence ID: {record.id}")
+        print(f"Sequence: {record.seq}")
+        sequence = str(record.seq)
+        print(f"Length: {len(sequence)}")
+        data = [(record.id, sequence)]
 
-        # 3. Encode a single sequence
-        tokens = tokenizer.encode(seq)
-        tokens = tokens.to(device)
+        batch_converter = alphabet.get_batch_converter()
+        batch_labels, batch_strs, batch_tokens = batch_converter(data)
+        batch_tokens = batch_tokens.to(device)
 
         with torch.no_grad():
-            embeddings = model(tokens.unsqueeze(0))["embeddings"]  # [1, L, 5120]
-        embeddings = embeddings.squeeze(0).cpu().numpy()
+            results = model(batch_tokens, repr_layers=[33], return_contacts=False)
 
-        np.save(os.path.join(output_directory, f"{record.id}.npy"), embeddings)
-        print(f"Saved {record.id}.npy")
+        tokens_embs = results['representations'][33].cpu().numpy()
+
+        np.save(os.path.join(output_directory, f'{record.id}.npy'), tokens_embs)
+        print(f'Saved embeddings for {record.id}')
