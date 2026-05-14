@@ -274,20 +274,6 @@ def main():
     for line in filedata:
         protein = line.strip()
         pdb_id = protein[:4].lower() + "-" + protein[5].upper()
-        skip_ids = {
-            '1gkm-A', '1bjp-A', '1otf-A', '1vie-A', '1dw9-A', '1l6j-A',
-            '1apy-B', '1clx-A', '1e6u-A', '1ey2-A', '1fc4-A', '1g8p-A',
-            '1kqp-A', '1m33-A', '1pp4-A', '1q6x-A', '1roz-A', '1vdr-A',
-            '1x9y-A', '1xs1-A', '2c3m-A', '1i1e-A', '1bxr-A', '1ea0-A',
-            '1k32-A', '1qwn-A', '1v97-A', '1ofd-A', '3cmm-A',
-            '1de3-A', '1r76-A', '1pyl-A', '1jch-A', '2cpo-A', '1rtu-A', '1xtc-A',
-            "1do6-A", "1gu1-A", "1f2v-A", "1wpo-A", "1n2c-A", "3a15-A", "1g24-A",
-            "1pya-A", "1qk2-A", "1abr-A", "1mro-A", "1tox-A", "1ro7-A", "3thi-A",
-            "2bbk-L", "2ahj-A", "1pya-B", "1cpo-_", "1lts-A", "1jix-A", "1l1l-A",
-            "1tml-_", "1i0v-A", '1l9e-A', '1mxt-A'
-        }
-        if pdb_id in skip_ids:
-            continue  # Skip these specific IDs
         IDs.append(pdb_id)
     f.close()
     prot_num = len(IDs)
